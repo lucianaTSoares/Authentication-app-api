@@ -1,20 +1,36 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import { UserRepository } from '../user/repository/user.repository';
+import { UserService } from '../user/user.service';
+import { User } from '@prisma/client';
+import * as bcrypt from 'bcrypt';
+import { AuthPayload } from './payload.model';
 
 @Injectable()
 export class AuthService {
   constructor(
-    private readonly userRepository: UserRepository,
+    private readonly userService: UserService,
     private readonly jwtService: JwtService,
   ) {}
 
-  async signIn(email: string, pass: string): Promise<any> {
-    const user = await this.userRepository.findOneByEmail(email);
-    if (user?.password !== pass) {
-      throw new UnauthorizedException();
+  async validateUser(email: string, password: string): Promise<User> {
+    const user = await this.userService.findOneByEmail(email);
+    const isPasswordValid = await bcrypt.compare(
+      password,
+      (user && user.password) || '',
+    );
+
+    if (!user || !isPasswordValid) {
+      throw new Error('Email ou senha incorretos.');
     }
-    const payload = { sub: user.id, username: user.email };
+
+    return {
+      ...user,
+      password: undefined,
+    };
+  }
+
+  async signIn(user: User): Promise<{ access_token: string }> {
+    const payload: AuthPayload = { sub: user.id, email: user.email };
 
     return {
       access_token: await this.jwtService.signAsync(payload),

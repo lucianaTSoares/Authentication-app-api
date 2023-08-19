@@ -1,15 +1,28 @@
-import { Controller, HttpCode, HttpStatus, Body, Post } from '@nestjs/common';
+import {
+  Controller,
+  HttpCode,
+  HttpStatus,
+  Request,
+  Post,
+  UseGuards,
+} from '@nestjs/common';
 import { AuthService } from './auth.service';
-import { AuthDto } from './dto/auth-dto';
+import { FastifyRequest } from 'fastify';
+import { LocalAuthGuard } from './guards/local-auth.guard';
+import { User } from '@prisma/client';
 
 @Controller('auth')
 export class AuthController {
   constructor(private authService: AuthService) {}
 
-  @HttpCode(HttpStatus.OK)
   @Post('login')
-  signIn(@Body() signInBody: AuthDto) {
-    const { email, password } = signInBody;
-    return this.authService.signIn(email, password);
+  @HttpCode(HttpStatus.OK)
+  @UseGuards(LocalAuthGuard)
+  signIn(
+    @Request()
+    req: FastifyRequest & { user: User },
+  ) {
+    console.log(req.user);
+    return this.authService.signIn(req.user);
   }
 }

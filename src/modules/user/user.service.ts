@@ -9,13 +9,13 @@ import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { UserRepository } from './repository/user.repository';
 import * as bcrypt from 'bcrypt';
-import { IUser } from './user.interface';
+import { User } from '@prisma/client';
 
 @Injectable()
 export class UserService {
   constructor(private readonly userRepository: UserRepository) {}
 
-  async create(createUserDto: CreateUserDto): Promise<Omit<IUser, 'password'>> {
+  async create(createUserDto: CreateUserDto): Promise<Omit<User, 'password'>> {
     const isEmailTaken = await this.userRepository.findOneByEmail(
       createUserDto.email,
     );
@@ -40,7 +40,7 @@ export class UserService {
     return createdUser;
   }
 
-  async findOne(id: string): Promise<Omit<IUser, 'password'>> {
+  async findOne(id: string): Promise<Omit<User, 'password'>> {
     const userExists = await this.userRepository.findOne(id);
 
     if (!userExists) {
@@ -52,10 +52,14 @@ export class UserService {
     return userWithoutPassword;
   }
 
+  async findOneByEmail(email: string): Promise<User | null> {
+    return await this.userRepository.findOneByEmail(email);
+  }
+
   async update(
     id: string,
     body: UpdateUserDto,
-  ): Promise<Omit<IUser, 'password'>> {
+  ): Promise<Omit<User, 'password'>> {
     const userExists = await this.userRepository.findOne(id);
 
     if (!userExists) {
@@ -63,7 +67,7 @@ export class UserService {
     }
 
     const userWithCryptedPassword = {
-      ...UpdateUserDto,
+      ...body,
       password: await bcrypt.hash(userExists.password, 10),
     };
 
