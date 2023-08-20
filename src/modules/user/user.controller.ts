@@ -17,13 +17,24 @@ import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { UserService } from './user.service';
 import { User } from '@prisma/client';
+import { ApiTags } from '@nestjs/swagger';
+import {
+  CustomNotFoundResponse,
+  CustomSuccessResponse,
+  CustomUnauthorizedResponse,
+  CustomUnprocessableResponse,
+} from '../../decorators/swagger-response.decorator';
 
+@ApiTags('User')
 @Controller('user')
 export class UserController {
   constructor(private readonly userService: UserService) {}
 
   @Post()
   @Public()
+  @CustomSuccessResponse({ operation: 'POST' })
+  @CustomUnauthorizedResponse()
+  @CustomUnprocessableResponse('User with this email already exists.')
   async create(
     @Body() createUserDto: CreateUserDto,
     @Response() res: FastifyReply,
@@ -39,6 +50,9 @@ export class UserController {
   }
 
   @Get(':id')
+  @CustomSuccessResponse({ operation: 'GET' })
+  @CustomNotFoundResponse('User not found.')
+  @CustomUnauthorizedResponse()
   async findOne(@Param('id') id: string, @Response() res: FastifyReply) {
     const response = await this.userService.findOne(id);
 
@@ -51,6 +65,8 @@ export class UserController {
   }
 
   @Patch()
+  @CustomSuccessResponse({ operation: 'PATCH' })
+  @CustomUnauthorizedResponse()
   async update(
     @Request() req: FastifyRequest & { user: User },
     @Body() updateUserDto: UpdateUserDto,
@@ -72,6 +88,7 @@ export class UserController {
   }
 
   @Delete(':id')
+  @CustomSuccessResponse({ optionalMessage: 'User removed successfully.' })
   async remove(@Param('id') id: string, @Response() res: FastifyReply) {
     const response = await this.userService.delete(id);
     return sendResponse<string>(res, HttpStatus.OK, response);

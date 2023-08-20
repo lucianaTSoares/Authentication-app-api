@@ -11,7 +11,9 @@ import { FastifyRequest } from 'fastify';
 import { Public } from '../../decorators/public.decorator';
 import { AuthService } from './auth.service';
 import { LocalAuthGuard } from './guards/local-auth.guard';
+import { ApiTags, ApiUnauthorizedResponse } from '@nestjs/swagger';
 
+@ApiTags('Authentication')
 @Controller('auth')
 export class AuthController {
   constructor(private authService: AuthService) {}
@@ -20,6 +22,7 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   @Public()
   @UseGuards(LocalAuthGuard)
+  @ApiUnauthorizedResponse({ description: 'Forbidden.' })
   signIn(
     @Request()
     req: FastifyRequest & { user: User },
