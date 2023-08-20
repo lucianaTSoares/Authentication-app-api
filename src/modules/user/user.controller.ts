@@ -8,18 +8,22 @@ import {
   Patch,
   Post,
   Response,
+  Request,
 } from '@nestjs/common';
+import { FastifyReply, FastifyRequest } from 'fastify';
+import { Public } from '../../decorators/public.decorator';
+import { sendResponse } from '../../utils/response.utils';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { UserService } from './user.service';
-import { FastifyReply } from 'fastify';
-import { sendResponse } from '../../utils/response.utils';
+import { User } from '@prisma/client';
 
 @Controller('user')
 export class UserController {
   constructor(private readonly userService: UserService) {}
 
   @Post()
+  @Public()
   async create(
     @Body() createUserDto: CreateUserDto,
     @Response() res: FastifyReply,
@@ -29,7 +33,7 @@ export class UserController {
     return sendResponse(
       res,
       HttpStatus.CREATED,
-      'Successfully retrieved all items',
+      'User created successfully.',
       response,
     );
   }
@@ -41,24 +45,25 @@ export class UserController {
     return sendResponse(
       res,
       HttpStatus.OK,
-      'Successfully retrieved all items',
+      'User found successfully.',
       response,
     );
   }
 
-  @Patch(':id')
+  @Patch()
   async update(
-    @Param('id') id: string,
+    @Request() req: FastifyRequest & { user: User },
     @Body() updateUserDto: UpdateUserDto,
     @Response() res: FastifyReply,
   ) {
     try {
-      const response = await this.userService.update(id, updateUserDto);
+      const user = req.user;
+      const response = await this.userService.update(user.id, updateUserDto);
 
       return sendResponse(
         res,
         HttpStatus.OK,
-        'Successfully retrieved all items',
+        'User updated successfully.',
         response,
       );
     } catch (err) {
@@ -68,7 +73,7 @@ export class UserController {
 
   @Delete(':id')
   async remove(@Param('id') id: string, @Response() res: FastifyReply) {
-    const response = await this.userService.remove(id);
+    const response = await this.userService.delete(id);
     return sendResponse<string>(res, HttpStatus.OK, response);
   }
 }

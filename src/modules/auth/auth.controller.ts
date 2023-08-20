@@ -2,14 +2,15 @@ import {
   Controller,
   HttpCode,
   HttpStatus,
-  Request,
   Post,
+  Request,
   UseGuards,
 } from '@nestjs/common';
-import { AuthService } from './auth.service';
-import { FastifyRequest } from 'fastify';
-import { LocalAuthGuard } from './guards/local-auth.guard';
 import { User } from '@prisma/client';
+import { FastifyRequest } from 'fastify';
+import { Public } from '../../decorators/public.decorator';
+import { AuthService } from './auth.service';
+import { LocalAuthGuard } from './guards/local-auth.guard';
 
 @Controller('auth')
 export class AuthController {
@@ -17,12 +18,12 @@ export class AuthController {
 
   @Post('login')
   @HttpCode(HttpStatus.OK)
+  @Public()
   @UseGuards(LocalAuthGuard)
   signIn(
     @Request()
     req: FastifyRequest & { user: User },
   ) {
-    console.log(req.user);
     return this.authService.signIn(req.user);
   }
 }
