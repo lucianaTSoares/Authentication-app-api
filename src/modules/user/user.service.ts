@@ -5,11 +5,11 @@ import {
   NotFoundException,
   UnprocessableEntityException,
 } from '@nestjs/common';
+import { User } from '@prisma/client';
+import * as bcrypt from 'bcrypt';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { UserRepository } from './repository/user.repository';
-import * as bcrypt from 'bcrypt';
-import { User } from '@prisma/client';
 
 @Injectable()
 export class UserService {
@@ -21,7 +21,9 @@ export class UserService {
     );
 
     if (isEmailTaken) {
-      throw new UnprocessableEntityException('Email already exists.');
+      throw new UnprocessableEntityException(
+        'User with this email already exists.',
+      );
     }
 
     const userWithCryptedPassword = {
@@ -83,7 +85,7 @@ export class UserService {
     return userUpdated;
   }
 
-  async remove(id: string): Promise<string> {
+  async delete(id: string): Promise<string> {
     const userExists = await this.userRepository.findOne(id);
 
     if (!userExists) {

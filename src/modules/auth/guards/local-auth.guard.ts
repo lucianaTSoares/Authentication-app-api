@@ -6,9 +6,9 @@ import {
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { plainToClass } from 'class-transformer';
-import { AuthDto } from '../dto/auth-dto';
 import { validate } from 'class-validator';
 import { FastifyReply } from 'fastify';
+import { AuthDto } from '../dto/auth-dto';
 
 @Injectable()
 export class LocalAuthGuard extends AuthGuard('local') {
